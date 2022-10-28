@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <title>Pixel Processor</title>
+        <script>
+            function addImage(canvas, callback) {
+                const context = canvas.getContext('2d');
+
+                image = new Image();
+                // TODO: I'd like to be able to load remote images but it seems like you're not allowed
+                image.src = 'https://github.com/aroxby/pixel-processor/raw/main/blue-flames.jpg';
+                image.onload = () => {
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+                    context.drawImage(image, 0, 0);
+                    callback();
+                }
+            }
+
+            function getImageData(canvas) {
+                const context = canvas.getContext('2d');
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                return imageData;
+            }
+
+            function transform(r, g, b, a) {
+                const tmp = b;
+                b = g / 2;
+                g = tmp;
+                r = r / 2;
+                return [r, g, b, a];
+            }
+
+            function fillCanvas() {
+                const canvas = document.getElementById('canvas');
+                addImage(canvas, () => {
+                    let pixels = getImageData(canvas);
+
+                    for(let i = 0; i < pixels.data.length; i += 4) {
+                        [pixels.data[i], pixels.data[i + 1], pixels.data[i + 2], pixels.data[i + 3]] = transform(
+                            pixels.data[i], pixels.data[i + 1], pixels.data[i + 2], pixels.data[i + 3]
+                        );
+                    }
+
+                    const context = canvas.getContext('2d');
+                    context.putImageData(pixels, 0, 0);
+                });
+            }
+        </script>
+    </head>
+    <body onload="javascript:fillCanvas()">
+        <canvas id="canvas"></canvas>
+    </body>
+</html>
