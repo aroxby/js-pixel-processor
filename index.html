@@ -2,18 +2,39 @@
     <head>
         <title>Pixel Processor</title>
         <script>
-            function addImage(canvas, callback) {
-                const context = canvas.getContext('2d');
+            function fetch(url, success, error) {
+                const request = new XMLHttpRequest();
 
-                image = new Image();
-                // TODO: I'd like to be able to load remote images but it seems like you're not allowed
-                image.src = 'https://aroxby.github.io/js-pixel-processor/blue-flames.jpg';
-                image.onload = () => {
-                    canvas.width = image.width;
-                    canvas.height = image.height;
-                    context.drawImage(image, 0, 0);
-                    callback();
-                }
+                request.open('GET', url);
+                request.responseType = 'blob';
+
+                request.onload = () => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(request.response);
+                    reader.onload =  (read) => {
+                        success(read.target.result);
+                    };
+                };
+
+                request.onerror = error;
+
+                request.send()
+            }
+
+            function addImage(canvas, callback) {
+                image_url = 'https://github.com/aroxby/js-pixel-processor/raw/main/blue-flames.jpg'
+                fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(image_url)}`, (dataUrl) => {
+                    const image = new Image();
+                    image.src = dataUrl;
+                    image.onload = () => {
+                        canvas.width = image.width;
+                        canvas.height = image.height;
+                        canvas.getContext('2d').drawImage(image, 0, 0);
+                        callback();
+                    }
+                }, () => {
+                    console.error('Could not load image');
+                });
             }
 
             function getImageData(canvas) {
