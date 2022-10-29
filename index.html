@@ -22,8 +22,10 @@
             }
 
             function addImage(canvas, callback) {
-                image_url = 'https://github.com/aroxby/js-pixel-processor/raw/main/blue-flames.jpg'
-                fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(image_url)}`, (dataUrl) => {
+                const image_url = 'https://github.com/aroxby/js-pixel-processor/raw/main/blue-flames.jpg';
+                const cors_url = `https://api.allorigins.win/raw?url=${encodeURIComponent(image_url)}`;
+
+                function onSuccess(dataUrl) {
                     const image = new Image();
                     image.src = dataUrl;
                     image.onload = () => {
@@ -31,10 +33,14 @@
                         canvas.height = image.height;
                         canvas.getContext('2d').drawImage(image, 0, 0);
                         callback();
-                    }
-                }, () => {
+                    };
+                }
+
+                function onError() {
                     console.error('Could not load image');
-                });
+                }
+
+                fetch(cors_url, onSuccess, onError);
             }
 
             function getImageData(canvas) {
@@ -51,11 +57,14 @@
                 return [r, g, b, a];
             }
 
-            function fillCanvas() {
+            function main() {
                 const canvas = document.getElementById('canvas');
-                addImage(canvas, () => {
+
+                function onImageLoaded() {
                     const pixels = getImageData(canvas);
 
+                    /* The standard doesn't explicitly say that the array length will be a multiple
+                     * of four but it's a pretty safe assumption */
                     for(let i = 0; i < pixels.data.length; i += 4) {
                         [pixels.data[i], pixels.data[i + 1], pixels.data[i + 2], pixels.data[i + 3]] = transform(
                             pixels.data[i], pixels.data[i + 1], pixels.data[i + 2], pixels.data[i + 3]
@@ -64,11 +73,13 @@
 
                     const context = canvas.getContext('2d');
                     context.putImageData(pixels, 0, 0);
-                });
+                }
+
+                addImage(canvas, onImageLoaded);
             }
         </script>
     </head>
-    <body onload="javascript:fillCanvas()">
+    <body onload="javascript:main()">
         <canvas id="canvas"></canvas>
     </body>
 </html>
