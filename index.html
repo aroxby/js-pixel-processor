@@ -54,7 +54,7 @@
             function fillCanvas() {
                 const canvas = document.getElementById('canvas');
                 addImage(canvas, () => {
-                    let pixels = getImageData(canvas);
+                    const pixels = getImageData(canvas);
 
                     for(let i = 0; i < pixels.data.length; i += 4) {
                         [pixels.data[i], pixels.data[i + 1], pixels.data[i + 2], pixels.data[i + 3]] = transform(
