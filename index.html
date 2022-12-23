@@ -2,6 +2,46 @@
     <head>
         <title>Pixel Processor</title>
         <script>
+            class Color {
+                constructor(r, g, b) {
+                    this.r = r;
+                    this.g = g;
+                    this.b = b;
+                }
+
+                static fromHtml(value) {
+                    const bigInt = parseInt(value.substring(1), 16);
+                    const r = bigInt >> 16;
+                    const g = bigInt >> 8 & 0xFF;
+                    const b = bigInt & 0xFF;
+                    return new Color(r, g, b);
+                }
+
+                getDirection() {
+                    return new Color(this.r / 255, this.g / 255, this.b / 255);
+                }
+
+                dotProduct(other) {
+                    return new Color(this.r * other.r, this.g * other.g, this.b * other.b);
+                }
+
+                magnitude() {
+                    return Math.sqrt(this.r ** 2 + this.g ** 2 + this.b ** 2);
+                }
+
+                scale(value) {
+                    return new Color(this.r * value, this.g * value, this.b * value);
+                }
+
+                add(other) {
+                    return new Color(this.r + other.r, this.g + other.g, this.b + other.b);
+                }
+
+                subtract(other) {
+                    return new Color(this.r - other.r, this.g - other.g, this.b - other.b);
+                }
+            }
+
             function fetch(url, success, error) {
                 const request = new XMLHttpRequest();
 
@@ -50,11 +90,28 @@
             }
 
             function transform(r, g, b, a) {
-                const tmp = b;
-                b = g / 2;
-                g = tmp;
-                r = r / 2;
-                return [r, g, b, a];
+                const inputColorControl = document.getElementById('inputColor');
+                const outputColorControl = document.getElementById('outputColor');
+                const inputColor = Color.fromHtml(inputColorControl.value);
+                const outputColor = Color.fromHtml(outputColorControl.value);
+                let thisColor = new Color(r, g, b);
+
+                // tmp = b
+                const inputWeight = thisColor.dotProduct(inputColor.getDirection());
+                const outputWeight = thisColor.dotProduct(outputColor.getDirection());
+                thisColor = thisColor.subtract(inputWeight);
+                thisColor = thisColor.subtract(outputWeight);
+                // b = g
+                let distance = outputWeight.magnitude();
+                let direction = inputColor.getDirection();
+                thisColor = thisColor.add(direction.scale(distance));
+
+                // g = b
+                distance = inputWeight.magnitude();
+                direction = outputColor.getDirection();
+                thisColor = thisColor.add(direction.scale(distance));
+
+                return [thisColor.r, thisColor.g, thisColor.b, a];
             }
 
             function main() {
@@ -80,6 +137,11 @@
         </script>
     </head>
     <body onload="javascript:main()">
+        <label>Input Color</label>
+        <input type="color" id="inputColor" value="#0000FF" />
+        <label>Output Color</label>
+        <input type="color" id="outputColor" value="#008800" />
+        <br>
         <canvas id="canvas"></canvas>
     </body>
 </html>
